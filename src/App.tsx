@@ -1,11 +1,9 @@
 import React from 'react';
 import { EditorComponent, Remirror, ThemeProvider, useRemirror, useRemirrorContext } from '@remirror/react';
-import {
-  TableComponents,
-	TableExtension,
-} from '@remirror/extension-react-tables';
+import { TableExtension } from '@remirror/extension-react-tables';
 import '@remirror/styles/all.css';
 import './App.css';
+import { TableCustomization } from './TableCustomization';
 
 const CommandMenu: React.FC = () => {
   const { commands } = useRemirrorContext();
@@ -31,7 +29,7 @@ function App() {
       <ThemeProvider>
         <Remirror manager={manager} onChange={onChange} state={state}>
           <EditorComponent />
-          <TableComponents />
+          <TableCustomization />
           <CommandMenu />
         </Remirror>
       </ThemeProvider>
