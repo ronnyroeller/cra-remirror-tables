@@ -1,40 +1,62 @@
-import { makeStyles } from '@material-ui/core/styles';
-import IconButton from '@material-ui/core/IconButton';
-import List from '@material-ui/core/List';
-import ListItem from '@material-ui/core/ListItem';
-import ListItemText from '@material-ui/core/ListItemText';
-import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
-import { TableComponents } from '@remirror/extension-react-tables';
-import {
-	TableCellMenuButtonProps,
-	TableCellMenuPopupProps,
-} from '@remirror/extension-react-tables/dist/declarations/src/components/table-cell-menu';
-import { useCommands } from '@remirror/react-core';
+import IconButton from "@material-ui/core/IconButton";
+import Menu from "@material-ui/core/Menu";
+import MenuItem from "@material-ui/core/MenuItem";
+import { makeStyles } from "@material-ui/core/styles";
+import ExpandMoreIcon from "@material-ui/icons/ExpandMore";
+import { TableComponents } from "@remirror/extension-react-tables";
+import type { TableCellMenuComponentProps } from "@remirror/extension-react-tables";
+import { useCommands } from "@remirror/react-core";
+import React from "react";
 
-const useStyles = makeStyles(theme => ({
+const useStyles = makeStyles((theme) => ({
 	popup: {
-		...theme.typography.body2,
-		position: 'absolute',
-		backgroundColor: 'white',
+		// ...theme.typography.body2,
+		// position: 'absolute',
+		// backgroundColor: 'white',
 		width: 320,
-		boxShadow: theme.shadows[8],
-		borderRadius: theme.shape.borderRadius,
+		// boxShadow: theme.shadows[8],
+		// borderRadius: theme.shape.borderRadius,
 	},
 }));
 
-const ButtonComponent: React.FC<TableCellMenuButtonProps> = ({
+const ContextMenu: React.FC<TableCellMenuComponentProps> = ({
+	popupOpen,
 	setPopupOpen,
 }) => {
+	const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
+
+	const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+		setAnchorEl(event.currentTarget);
+		setPopupOpen(true);
+	};
+
+	const handleClose = () => {
+		setAnchorEl(null);
+		setPopupOpen(false);
+	};
+
 	return (
-		<IconButton size="small" onClick={() => setPopupOpen(true)}>
-			<ExpandMoreIcon />
-		</IconButton>
+		<div>
+			<IconButton
+				aria-controls="simple-menu"
+				aria-haspopup="true"
+				size="small"
+				onClick={handleClick}
+			>
+				<ExpandMoreIcon />
+			</IconButton>
+			<MenuPopup
+				anchorEl={popupOpen ? anchorEl : null}
+				handleClose={handleClose}
+			/>
+		</div>
 	);
 };
 
-const PopupComponent: React.FC<TableCellMenuPopupProps> = ({
-	setPopupOpen,
-}) => {
+const MenuPopup: React.FC<{
+	anchorEl: HTMLElement | null;
+	handleClose: () => void;
+}> = ({ anchorEl, handleClose }) => {
 	const commands = useCommands();
 	const classes = useStyles();
 
@@ -42,7 +64,7 @@ const PopupComponent: React.FC<TableCellMenuPopupProps> = ({
 	const handleClick = (command: () => void) => {
 		return () => {
 			command();
-			setPopupOpen(false);
+			handleClose();
 		};
 	};
 
@@ -55,37 +77,44 @@ const PopupComponent: React.FC<TableCellMenuPopupProps> = ({
 	};
 
 	return (
-		<List className={classes.popup}>
-			<ListItem button onClick={setTableCellBackground('red')}>
-				<ListItemText>Highlight</ListItemText>
-			</ListItem>
-			<ListItem button onClick={setTableCellBackground(null)}>
-				<ListItemText>Remove cell color</ListItemText>
-			</ListItem>
+		<Menu
+			id="simple-menu"
+			anchorEl={anchorEl}
+			keepMounted
+			open={Boolean(anchorEl)}
+			classes={{ paper: classes.popup }}
+			onClose={handleClose}
+		>
+			<MenuItem button onClick={setTableCellBackground("red")}>
+				Highlight
+      </MenuItem>
+			<MenuItem button onClick={setTableCellBackground(null)}>
+				Remove cell color
+      </MenuItem>
 
-			<ListItem button onClick={handleClick(commands.addTableRowBefore)}>
-				<ListItemText>Insert row above</ListItemText>
-			</ListItem>
-			<ListItem button onClick={handleClick(commands.addTableRowAfter)}>
-				<ListItemText>Insert row below</ListItemText>
-			</ListItem>
-			<ListItem button onClick={handleClick(commands.addTableColumnBefore)}>
-				<ListItemText>Insert column before</ListItemText>
-			</ListItem>
-			<ListItem button onClick={handleClick(commands.addTableColumnAfter)}>
-				<ListItemText>Insert column after</ListItemText>
-			</ListItem>
+			<MenuItem button onClick={handleClick(commands.addTableRowBefore)}>
+				Insert row above
+      </MenuItem>
+			<MenuItem button onClick={handleClick(commands.addTableRowAfter)}>
+				Insert row below
+      </MenuItem>
+			<MenuItem button onClick={handleClick(commands.addTableColumnBefore)}>
+				Insert column before
+      </MenuItem>
+			<MenuItem button onClick={handleClick(commands.addTableColumnAfter)}>
+				Insert column after
+      </MenuItem>
 
-			<ListItem button onClick={handleClick(commands.deleteTableColumn)}>
-				<ListItemText>Remove column</ListItemText>
-			</ListItem>
-			<ListItem button onClick={handleClick(commands.deleteTableRow)}>
-				<ListItemText>Remove row</ListItemText>
-			</ListItem>
-			<ListItem button onClick={handleClick(commands.deleteTable)}>
-				<ListItemText>Remove table</ListItemText>
-			</ListItem>
-		</List>
+			<MenuItem button onClick={handleClick(commands.deleteTableColumn)}>
+				Remove column
+      </MenuItem>
+			<MenuItem button onClick={handleClick(commands.deleteTableRow)}>
+				Remove row
+      </MenuItem>
+			<MenuItem button onClick={handleClick(commands.deleteTable)}>
+				Remove table
+      </MenuItem>
+		</Menu>
 	);
 };
 
@@ -93,8 +122,7 @@ export function TableCustomization() {
 	return (
 		<TableComponents
 			tableCellMenuProps={{
-				ButtonComponent,
-				PopupComponent,
+				Component: ContextMenu,
 			}}
 		/>
 	);
